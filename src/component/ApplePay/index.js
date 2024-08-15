@@ -16,13 +16,16 @@ const Payment = () => {
 
 	useEffect(() => {
 		// Gửi yêu cầu tới backend để tạo PaymentIntent
-		fetch("http://localhost:3001/create-payment-intent", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
+		fetch(
+			"https://1ced-113-23-53-236.ngrok-free.app/create-payment-intent",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ amount: 5000 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
 			},
-			body: JSON.stringify({ amount: 5000 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
-		})
+		)
 			.then((res) => res.json())
 			.then((data) => {
 				console.log("Client secret received:", data.clientSecret);
@@ -48,7 +51,7 @@ const Payment = () => {
 					// Kiểm tra xem phương thức thanh toán có khả dụng không
 					pr.canMakePayment()
 						.then((result) => {
-							console.log("canMakePayment result:", result); // Thêm log ở đây
+							console.log("canMakePayment result:", result);
 
 							if (result) {
 								setPaymentRequest(pr);
@@ -56,14 +59,10 @@ const Payment = () => {
 								console.warn(
 									"PaymentRequest not supported or no valid payment method available.",
 								);
-								// Nếu không khả dụng, không hiển thị nút hoặc hiển thị thông báo khác
-								alert(
-									"Apple Pay is not available on this device/browser. Please ensure that you have a valid payment method set up in Wallet and try again.",
-								);
 							}
 						})
 						.catch((error) => {
-							console.error("Error in canMakePayment:", error); // Log lỗi nếu có
+							console.error("Error in canMakePayment:", error);
 						});
 				} else {
 					console.error("Stripe object is not available.");
@@ -103,7 +102,6 @@ const Payment = () => {
 			setIsProcessing(false);
 		} else if (paymentIntent && paymentIntent.status === "succeeded") {
 			console.log("Payment successful!");
-			// Xử lý thành công, có thể điều hướng hoặc hiển thị thông báo
 			setIsProcessing(false);
 		}
 	};
@@ -111,10 +109,10 @@ const Payment = () => {
 	return (
 		<div>
 			<h2>Apple Pay & Card Payment Demo</h2>
-			{!paymentRequest ? (
-				<p>Apple Pay is not available on this device/browser.</p>
-			) : (
+			{paymentRequest ? (
 				<PaymentRequestButtonElement options={{ paymentRequest }} />
+			) : (
+				<p>Apple Pay is not available on this device/browser.</p>
 			)}
 
 			<hr />
