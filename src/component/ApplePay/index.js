@@ -2,12 +2,17 @@ import React, { useState, useEffect } from "react";
 import {
 	PaymentRequestButtonElement,
 	useStripe,
+	useElements,
+	CardElement,
 } from "@stripe/react-stripe-js";
 
 const Payment = () => {
 	const stripe = useStripe();
+	const elements = useElements();
 	const [paymentRequest, setPaymentRequest] = useState(null);
 	const [clientSecret, setClientSecret] = useState("");
+	const [errorMessage, setErrorMessage] = useState(null);
+	const [isProcessing, setIsProcessing] = useState(false);
 
 	useEffect(() => {
 		// Gửi yêu cầu tới backend để tạo PaymentIntent
@@ -24,6 +29,10 @@ const Payment = () => {
 				setClientSecret(data.clientSecret);
 
 				if (stripe) {
+					console.log(
+						"Stripe object is available, creating paymentRequest...",
+					);
+
 					// Khởi tạo PaymentRequest sau khi nhận được clientSecret
 					const pr = stripe.paymentRequest({
 						country: "US",
@@ -56,20 +65,67 @@ const Payment = () => {
 						.catch((error) => {
 							console.error("Error in canMakePayment:", error); // Log lỗi nếu có
 						});
+				} else {
+					console.error("Stripe object is not available.");
 				}
 			})
 			.catch((error) => console.error("Error:", error));
 	}, [stripe]);
 
-	if (!paymentRequest) {
-		// Nếu paymentRequest chưa được khởi tạo, không render nút
-		return <p>Apple Pay is not available on this device/browser.</p>;
-	}
+	const handleSubmit = async (event) => {
+		event.preventDefault();
+		setIsProcessing(true);
+
+		if (!stripe || !elements || !clientSecret) {
+			console.error(
+				"Stripe, elements, or clientSecret is not available.",
+			);
+			setIsProcessing(false);
+			return;
+		}
+
+		const cardElement = elements.getElement(CardElement);
+
+		const { error, paymentIntent } = await stripe.confirmCardPayment(
+			clientSecret,
+			{
+				payment_method: {
+					card: cardElement,
+					billing_details: {
+						name: "Customer Name",
+					},
+				},
+			},
+		);
+
+		if (error) {
+			setErrorMessage(error.message);
+			setIsProcessing(false);
+		} else if (paymentIntent && paymentIntent.status === "succeeded") {
+			console.log("Payment successful!");
+			// Xử lý thành công, có thể điều hướng hoặc hiển thị thông báo
+			setIsProcessing(false);
+		}
+	};
 
 	return (
 		<div>
-			<h2>Apple Pay Demo</h2>
-			<PaymentRequestButtonElement options={{ paymentRequest }} />
+			<h2>Apple Pay & Card Payment Demo</h2>
+			{!paymentRequest ? (
+				<p>Apple Pay is not available on this device/browser.</p>
+			) : (
+				<PaymentRequestButtonElement options={{ paymentRequest }} />
+			)}
+
+			<hr />
+
+			<form onSubmit={handleSubmit}>
+				<CardElement />
+				<button type="submit" disabled={!stripe || isProcessing}>
+					{isProcessing ? "Processing..." : "Pay"}
+				</button>
+				{errorMessage && <div className="error">{errorMessage}</div>}
+			</form>
 		</div>
 	);
 };
