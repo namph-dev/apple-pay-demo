@@ -25,7 +25,7 @@ const Payment = () => {
 				headers: {
 					"Content-Type": "application/json",
 				},
-				body: JSON.stringify({ amount: 5000 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
+				body: JSON.stringify({ amount: 100 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
 			},
 		)
 			.then((res) => res.json())
@@ -44,7 +44,7 @@ const Payment = () => {
 						currency: "usd",
 						total: {
 							label: "Demo Payment",
-							amount: 5000,
+							amount: 100,
 						},
 						requestPayerName: true,
 						requestPayerEmail: true,
@@ -161,7 +161,7 @@ const Payment = () => {
 									headers: {
 										"Content-Type": "application/json",
 									},
-									body: JSON.stringify({ amount: 5000 }), // Amount in cents (5000 cents = $50)
+									body: JSON.stringify({ amount: 100 }), // Amount in cents (5000 cents = $50)
 								},
 							)
 								.then((response) => response.json())
