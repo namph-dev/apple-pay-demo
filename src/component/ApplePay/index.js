@@ -5,6 +5,7 @@ import {
 	useElements,
 	CardElement,
 } from "@stripe/react-stripe-js";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 
 const Payment = () => {
 	const stripe = useStripe();
@@ -13,11 +14,12 @@ const Payment = () => {
 	const [clientSecret, setClientSecret] = useState("");
 	const [errorMessage, setErrorMessage] = useState(null);
 	const [isProcessing, setIsProcessing] = useState(false);
+	const [paidFor, setPaidFor] = useState(false);
 
 	useEffect(() => {
 		// Gửi yêu cầu tới backend để tạo PaymentIntent
 		fetch(
-			"https://1ced-113-23-53-236.ngrok-free.app/create-payment-intent",
+			"  https://2a3d-113-23-53-236.ngrok-free.app/create-payment-intent",
 			{
 				method: "POST",
 				headers: {
@@ -71,7 +73,7 @@ const Payment = () => {
 			.catch((error) => console.error("Error:", error));
 	}, [stripe]);
 
-	const handleSubmit = async (event) => {
+	const handleStripeSubmit = async (event) => {
 		event.preventDefault();
 		setIsProcessing(true);
 
@@ -106,21 +108,89 @@ const Payment = () => {
 		}
 	};
 
+	const handlePayPalApprove = (orderID) => {
+		// Capture PayPal order
+		fetch(
+			"https://2a3d-113-23-53-236.ngrok-free.app/capture-paypal-order",
+			{
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ orderID }),
+			},
+		)
+			.then((response) => response.json())
+			.then((data) => {
+				setPaidFor(true);
+				console.log("Payment captured successfully:", data);
+			})
+			.catch((error) => {
+				setErrorMessage(error.message);
+				console.error("Error capturing PayPal order:", error);
+			});
+	};
+
+	const handlePayPalError = (err) => {
+		setErrorMessage(err.message);
+		console.error("Payment error:", err);
+	};
+
 	return (
 		<div>
-			<h2>Apple Pay & Card Payment Demo</h2>
+			<h2>Payment Demo (Stripe & PayPal)</h2>
+
+			{/* PayPal Payment */}
+			<h3>PayPal Payment</h3>
+			{paidFor ? (
+				<h3>Thank you for your purchase!</h3>
+			) : (
+				<PayPalScriptProvider
+					options={{
+						"client-id":
+							"EHShOetcq_Sc_Th00ibP42jZImb1wrrTWc-omInycjeNW4gwQflEmqlhzGKk3tYrjFM9kmjcfWe7cgS1",
+					}}
+				>
+					<PayPalButtons
+						style={{ layout: "vertical" }}
+						createOrder={(data, actions) => {
+							return fetch(
+								"https://2a3d-113-23-53-236.ngrok-free.app/create-paypal-order",
+								{
+									method: "POST",
+									headers: {
+										"Content-Type": "application/json",
+									},
+									body: JSON.stringify({ amount: 5000 }), // Amount in cents (5000 cents = $50)
+								},
+							)
+								.then((response) => response.json())
+								.then((data) => {
+									return data.id;
+								});
+						}}
+						onApprove={(data, actions) => {
+							return handlePayPalApprove(data.orderID);
+						}}
+						onError={(err) => handlePayPalError(err)}
+					/>
+				</PayPalScriptProvider>
+			)}
+
+			<hr />
+
+			{/* Stripe Payment */}
+			<h3>Stripe Payment</h3>
 			{paymentRequest ? (
 				<PaymentRequestButtonElement options={{ paymentRequest }} />
 			) : (
 				<p>Apple Pay is not available on this device/browser.</p>
 			)}
 
-			<hr />
-
-			<form onSubmit={handleSubmit}>
+			<form onSubmit={handleStripeSubmit}>
 				<CardElement />
 				<button type="submit" disabled={!stripe || isProcessing}>
-					{isProcessing ? "Processing..." : "Pay"}
+					{isProcessing ? "Processing..." : "Pay with Card"}
 				</button>
 				{errorMessage && <div className="error">{errorMessage}</div>}
 			</form>
