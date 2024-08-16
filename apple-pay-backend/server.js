@@ -14,12 +14,11 @@ app.use(express.json());
 console.log("Stripe Secret Key:", process.env.STRIPE_SECRET_KEY);
 
 // PayPal environment configuration
-let environment = new paypal.core.SandboxEnvironment(
+let environment = new paypal.core.LiveEnvironment(
 	process.env.PAYPAL_CLIENT_ID,
 	process.env.PAYPAL_CLIENT_SECRET,
 );
 let paypalClient = new paypal.core.PayPalHttpClient(environment);
-
 // Endpoint tạo PaymentIntent cho Stripe
 app.post("/create-payment-intent", async (req, res) => {
 	try {

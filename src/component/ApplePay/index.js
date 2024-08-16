@@ -148,7 +148,7 @@ const Payment = () => {
 				<PayPalScriptProvider
 					options={{
 						"client-id":
-							"EHShOetcq_Sc_Th00ibP42jZImb1wrrTWc-omInycjeNW4gwQflEmqlhzGKk3tYrjFM9kmjcfWe7cgS1",
+							"AU4_flDkT_NKhMu_YQnsQSa1UGF5czxEANZrgxsaPVl24AiIcPZfcYlShOitTY8h4w089I6ciIYGURmk",
 					}}
 				>
 					<PayPalButtons
