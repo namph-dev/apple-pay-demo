@@ -1,8 +1,13 @@
 const express = require("express");
-const stripe = require("stripe")("YOUR_STRIPE_SECRET_KEY");
-const paypal = require("@paypal/checkout-server-sdk");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const cors = require("cors");
 require("dotenv").config();
+
+const {
+	createOrder,
+	capturePayment,
+	generateClientToken,
+} = require("./paypal-api");
 
 const app = express();
 
@@ -13,12 +18,6 @@ app.use(express.json());
 // Stripe Secret Key
 console.log("Stripe Secret Key:", process.env.STRIPE_SECRET_KEY);
 
-// PayPal environment configuration
-let environment = new paypal.core.LiveEnvironment(
-	process.env.PAYPAL_CLIENT_ID,
-	process.env.PAYPAL_CLIENT_SECRET,
-);
-let paypalClient = new paypal.core.PayPalHttpClient(environment);
 // Endpoint tạo PaymentIntent cho Stripe
 app.post("/create-payment-intent", async (req, res) => {
 	try {
@@ -50,24 +49,12 @@ app.post("/create-paypal-order", async (req, res) => {
 	try {
 		const { amount } = req.body;
 
-		const request = new paypal.orders.OrdersCreateRequest();
-		request.prefer("return=representation");
-		request.requestBody({
-			intent: "CAPTURE",
-			purchase_units: [
-				{
-					amount: {
-						currency_code: "USD",
-						value: (amount / 100).toFixed(2), // Chuyển đổi cent sang đô la
-					},
-				},
-			],
-		});
+		// Use createOrder from paypal-api.js
+		const order = await createOrder(amount);
 
-		const order = await paypalClient.execute(request);
 		console.log("PayPal order created:", order);
 
-		res.status(200).json({ id: order.result.id });
+		res.status(200).json({ id: order.id });
 	} catch (error) {
 		console.error("Error creating PayPal order:", error);
 		res.status(500).json({ error: error.message });
@@ -79,13 +66,12 @@ app.post("/capture-paypal-order", async (req, res) => {
 	try {
 		const { orderID } = req.body;
 
-		const request = new paypal.orders.OrdersCaptureRequest(orderID);
-		request.requestBody({});
+		// Use capturePayment from paypal-api.js
+		const capture = await capturePayment(orderID);
 
-		const capture = await paypalClient.execute(request);
 		console.log("PayPal order captured:", capture);
 
-		res.status(200).json(capture.result);
+		res.status(200).json(capture);
 	} catch (error) {
 		console.error("Error capturing PayPal order:", error);
 		res.status(500).json({ error: error.message });
