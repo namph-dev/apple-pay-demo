@@ -1,14 +1,16 @@
-const express = require("express");
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const cors = require("cors");
-require("dotenv").config();
-
-const {
+import express from "express";
+import Stripe from "stripe";
+import cors from "cors";
+import dotenv from "dotenv";
+import {
 	createOrder,
 	capturePayment,
 	generateClientToken,
-} = require("./paypal-api");
+} from "./paypal-api.js";
 
+dotenv.config();
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
 // Middleware
