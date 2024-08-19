@@ -5,22 +5,26 @@ import dotenv from "dotenv";
 import {
 	createOrder,
 	capturePayment,
-	generateClientToken,
+	generateAccessToken,
 } from "./paypal-api.js";
 
+// Load environment variables from .env file
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const app = express();
 
-// Middleware
+// Middleware setup
 app.use(cors());
 app.use(express.json());
 
-// Stripe Secret Key
+// Log environment variables for debugging (remove in production)
 console.log("Stripe Secret Key:", process.env.STRIPE_SECRET_KEY);
+console.log("PayPal Client ID:", process.env.CLIENT_ID);
+console.log("PayPal Client Secret:", process.env.CLIENT_SECRET);
+console.log("Merchant ID:", process.env.MERCHANT_ID);
 
-// Endpoint tạo PaymentIntent cho Stripe
+// Endpoint to create a Stripe PaymentIntent
 app.post("/create-payment-intent", async (req, res) => {
 	try {
 		const { amount } = req.body;
@@ -46,13 +50,16 @@ app.post("/create-payment-intent", async (req, res) => {
 	}
 });
 
-// Endpoint tạo đơn hàng PayPal
+// Endpoint to create a PayPal order
 app.post("/create-paypal-order", async (req, res) => {
 	try {
 		const { amount } = req.body;
 
-		// Use createOrder from paypal-api.js
 		const order = await createOrder(amount);
+
+		if (!order || !order.id) {
+			throw new Error("Failed to create PayPal order.");
+		}
 
 		console.log("PayPal order created:", order);
 
@@ -63,12 +70,11 @@ app.post("/create-paypal-order", async (req, res) => {
 	}
 });
 
-// Endpoint capture PayPal order sau khi thanh toán thành công
+// Endpoint to capture a PayPal order after payment
 app.post("/capture-paypal-order", async (req, res) => {
 	try {
 		const { orderID } = req.body;
 
-		// Use capturePayment from paypal-api.js
 		const capture = await capturePayment(orderID);
 
 		console.log("PayPal order captured:", capture);
@@ -80,7 +86,18 @@ app.post("/capture-paypal-order", async (req, res) => {
 	}
 });
 
-// Lắng nghe cổng 3001
+// Test route to check PayPal authentication (for debugging)
+app.get("/test-paypal-auth", async (req, res) => {
+	try {
+		const accessToken = await generateAccessToken();
+		res.status(200).json({ accessToken });
+	} catch (error) {
+		console.error("Error fetching PayPal access token:", error);
+		res.status(500).json({ error: error.message });
+	}
+});
+
+// Start the server on port 3001
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
 	console.log(`Server running on port ${PORT}`);

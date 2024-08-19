@@ -19,7 +19,7 @@ const Payment = () => {
 	useEffect(() => {
 		// Gửi yêu cầu tới backend để tạo PaymentIntent
 		fetch(
-			"  https://2a3d-113-23-53-236.ngrok-free.app/create-payment-intent",
+			"   https://e65b-113-23-53-236.ngrok-free.app/create-payment-intent",
 			{
 				method: "POST",
 				headers: {
@@ -111,7 +111,7 @@ const Payment = () => {
 	const handlePayPalApprove = (orderID) => {
 		// Capture PayPal order
 		fetch(
-			"https://2a3d-113-23-53-236.ngrok-free.app/capture-paypal-order",
+			" https://e65b-113-23-53-236.ngrok-free.app/capture-paypal-order",
 			{
 				method: "POST",
 				headers: {
@@ -155,7 +155,7 @@ const Payment = () => {
 						style={{ layout: "vertical" }}
 						createOrder={(data, actions) => {
 							return fetch(
-								"https://2a3d-113-23-53-236.ngrok-free.app/create-paypal-order",
+								" https://e65b-113-23-53-236.ngrok-free.app/create-paypal-order",
 								{
 									method: "POST",
 									headers: {
