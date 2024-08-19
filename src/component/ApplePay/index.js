@@ -19,7 +19,7 @@ const Payment = () => {
 	useEffect(() => {
 		// Gửi yêu cầu tới backend để tạo PaymentIntent
 		fetch(
-			"   https://e65b-113-23-53-236.ngrok-free.app/create-payment-intent",
+			"https://e65b-113-23-53-236.ngrok-free.app/create-payment-intent",
 			{
 				method: "POST",
 				headers: {
@@ -111,7 +111,7 @@ const Payment = () => {
 	const handlePayPalApprove = (orderID) => {
 		// Capture PayPal order
 		fetch(
-			" https://e65b-113-23-53-236.ngrok-free.app/capture-paypal-order",
+			"https://e65b-113-23-53-236.ngrok-free.app/capture-paypal-order",
 			{
 				method: "POST",
 				headers: {
@@ -148,25 +148,31 @@ const Payment = () => {
 				<PayPalScriptProvider
 					options={{
 						"client-id":
-							"AU4_flDkT_NKhMu_YQnsQSa1UGF5czxEANZrgxsaPVl24AiIcPZfcYlShOitTY8h4w089I6ciIYGURmk",
+							"Adx6N1yiRoV5HEOiMr31FK9HZsUNrb_ZXdGezDSwNwZIlXsP24vmkokWDdsMKLxDbBTP2psvpIXEKhVM",
 					}}
 				>
 					<PayPalButtons
 						style={{ layout: "vertical" }}
 						createOrder={(data, actions) => {
 							return fetch(
-								" https://e65b-113-23-53-236.ngrok-free.app/create-paypal-order",
+								"https://e65b-113-23-53-236.ngrok-free.app/create-paypal-order", // Make sure this URL is correct
 								{
 									method: "POST",
 									headers: {
 										"Content-Type": "application/json",
 									},
-									body: JSON.stringify({ amount: 100 }), // Amount in cents (5000 cents = $50)
+									body: JSON.stringify({ amount: 100 }), // Example amount in cents
 								},
 							)
 								.then((response) => response.json())
 								.then((data) => {
-									return data.id;
+									if (data.id) {
+										return data.id; // Return the PayPal order ID
+									} else {
+										throw new Error(
+											"Order ID not received from server",
+										);
+									}
 								});
 						}}
 						onApprove={(data, actions) => {
