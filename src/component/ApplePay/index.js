@@ -15,19 +15,16 @@ const Payment = () => {
 	const [errorMessage, setErrorMessage] = useState(null);
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [paidFor, setPaidFor] = useState(false);
-
+	const apiBaseUrl = "https://e65b-113-23-53-236.ngrok-free.app";
 	useEffect(() => {
 		// Gửi yêu cầu tới backend để tạo PaymentIntent
-		fetch(
-			"https://e65b-113-23-53-236.ngrok-free.app/create-payment-intent",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ amount: 100 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
+		fetch(`${apiBaseUrl}/create-payment-intent`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
 			},
-		)
+			body: JSON.stringify({ amount: 100 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
+		})
 			.then((res) => res.json())
 			.then((data) => {
 				console.log("Client secret received:", data.clientSecret);
@@ -110,16 +107,13 @@ const Payment = () => {
 
 	const handlePayPalApprove = (orderID) => {
 		// Capture PayPal order
-		fetch(
-			"https://e65b-113-23-53-236.ngrok-free.app/capture-paypal-order",
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ orderID }),
+		fetch(`${apiBaseUrl}/capture-paypal-order`, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
 			},
-		)
+			body: JSON.stringify({ orderID }),
+		})
 			.then((response) => response.json())
 			.then((data) => {
 				setPaidFor(true);
@@ -148,7 +142,7 @@ const Payment = () => {
 				<PayPalScriptProvider
 					options={{
 						"client-id":
-							"AcQrx8cdSaM8zNGMYetniBvpZxEZgzF-wppogtY6wDZEExEUkB5SKeNkDa-C4NVnTnLMChA_ObFusyX0",
+							"AU4_flDkT_NKhMu_YQnsQSa1UGF5czxEANZrgxsaPVl24AiIcPZfcYlShOitTY8h4w089I6ciIYGURmk",
 					}}
 				>
 					<PayPalButtons
@@ -159,7 +153,7 @@ const Payment = () => {
 								100,
 							);
 							return fetch(
-								"https://e65b-113-23-53-236.ngrok-free.app/create-paypal-order", // Make sure this URL is correct
+								`${apiBaseUrl}/create-paypal-order`, // Make sure this URL is correct
 								{
 									method: "POST",
 									headers: {

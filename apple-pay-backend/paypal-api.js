@@ -6,11 +6,19 @@ dotenv.config();
 const { CLIENT_ID, CLIENT_SECRET, MERCHANT_ID } = process.env;
 
 // Base URL for PayPal API
-const base = "https://api-m.sandbox.paypal.com"; // Use the sandbox base URL for testing
+// const base = "https://api-m.sandbox.paypal.com"; // Use the sandbox base URL for testing
+const base = "https://api-m.paypal.com"; // Use the live base URL for testing
 
 // Function to generate an access token
 export async function generateAccessToken() {
-	const auth = Buffer.from(CLIENT_ID + ":" + APP_SECRET).toString("base64");
+	console.log("CLIENT_ID:", CLIENT_ID);
+	console.log("CLIENT_SECRET:", CLIENT_SECRET);
+
+	const auth = Buffer.from(CLIENT_ID + ":" + CLIENT_SECRET).toString(
+		"base64",
+	);
+	console.log("Authorization Header:", `Basic ${auth}`);
+
 	const response = await fetch(`${base}/v1/oauth2/token`, {
 		method: "post",
 		body: "grant_type=client_credentials",
@@ -18,30 +26,19 @@ export async function generateAccessToken() {
 			Authorization: `Basic ${auth}`,
 		},
 	});
+
+	console.log("Response Status:", response.status);
+
 	const jsonData = await handleResponse(response);
 	return jsonData.access_token;
-}
-
-// generate client token
-export async function generateClientToken() {
-	const accessToken = await generateAccessToken();
-	const response = await fetch(`${base}/v1/identity/generate-token`, {
-		method: "post",
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			"Accept-Language": "en_US",
-			"Content-Type": "application/json",
-		},
-	});
-	console.log("response", response.status);
-	const jsonData = await handleResponse(response);
-	return jsonData.client_token;
 }
 
 // Function to generate a PayPal client token
 export async function generateClientToken() {
 	try {
 		const accessToken = await generateAccessToken();
+		console.log("Access Token:", accessToken);
+
 		const response = await fetch(`${base}/v1/identity/generate-token`, {
 			method: "post",
 			headers: {
@@ -50,6 +47,7 @@ export async function generateClientToken() {
 				"Content-Type": "application/json",
 			},
 		});
+
 		console.log("Response Status:", response.status);
 
 		const jsonData = await handleResponse(response);
@@ -66,49 +64,70 @@ export async function generateClientToken() {
 
 // Function to create a PayPal order
 export async function createOrder(amount) {
-	const accessToken = await generateAccessToken();
-	console.log("Access Token:", accessToken);
+	try {
+		console.log(
+			"Received request to create PayPal order with amount:",
+			amount,
+		);
 
-	const purchaseAmount = (amount / 100).toFixed(2); // Convert amount from cents to dollars
-	const url = `${base}/v2/checkout/orders`;
-	const response = await fetch(url, {
-		method: "post",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${accessToken}`,
-		},
-		body: JSON.stringify({
-			intent: "CAPTURE",
-			purchase_units: [
-				{
-					amount: {
-						currency_code: "USD",
-						value: purchaseAmount,
-					},
-					payee: {
-						merchant_id: MERCHANT_ID,
-					},
-				},
-			],
-		}),
-	});
+		const accessToken = await generateAccessToken();
+		console.log("Access Token:", accessToken);
 
-	return handleResponse(response);
+		const purchaseAmount = (amount / 100).toFixed(2); // Convert amount from cents to dollars
+		const url = `${base}/v2/checkout/orders`;
+		const response = await fetch(url, {
+			method: "post",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${accessToken}`,
+			},
+			body: JSON.stringify({
+				intent: "CAPTURE",
+				purchase_units: [
+					{
+						amount: {
+							currency_code: "USD",
+							value: purchaseAmount,
+						},
+						payee: {
+							merchant_id: MERCHANT_ID,
+						},
+					},
+				],
+			}),
+		});
+
+		console.log("Response Status:", response.status);
+
+		return handleResponse(response);
+	} catch (error) {
+		console.error("Error creating PayPal order on BE:", error);
+		throw error;
+	}
 }
 
 // Function to capture payment for an order
 export async function capturePayment(orderId) {
-	const accessToken = await generateAccessToken();
-	const url = `${base}/v2/checkout/orders/${orderId}/capture`;
-	const response = await fetch(url, {
-		method: "post",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${accessToken}`,
-		},
-	});
+	try {
+		const accessToken = await generateAccessToken();
+		console.log("Access Token:", accessToken);
 
-	return handleResponse(response);
+		const url = `${base}/v2/checkout/orders/${orderId}/capture`;
+		const response = await fetch(url, {
+			method: "post",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${accessToken}`,
+			},
+		});
+
+		console.log("Response Status:", response.status);
+
+		return handleResponse(response);
+	} catch (error) {
+		console.error("Error capturing PayPal payment:", error);
+		throw error;
+	}
 }
 
 // Function to handle API responses

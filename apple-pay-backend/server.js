@@ -20,7 +20,6 @@ app.use(express.json());
 
 // Log environment variables for debugging (remove in production)
 
-
 // Endpoint to create a Stripe PaymentIntent
 app.post("/create-payment-intent", async (req, res) => {
 	try {
