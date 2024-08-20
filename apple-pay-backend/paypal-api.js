@@ -1,4 +1,6 @@
 import fetch from "node-fetch";
+import dotenv from "dotenv";
+dotenv.config();
 
 // Load environment variables
 const { CLIENT_ID, CLIENT_SECRET, MERCHANT_ID } = process.env;
@@ -8,28 +10,58 @@ const base = "https://api-m.sandbox.paypal.com"; // Use the sandbox base URL for
 
 // Function to generate an access token
 export async function generateAccessToken() {
-	const auth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString(
-		"base64",
-	);
-	console.log("Authorization Header:", `Basic ${auth}`);
-
+	const auth = Buffer.from(CLIENT_ID + ":" + APP_SECRET).toString("base64");
 	const response = await fetch(`${base}/v1/oauth2/token`, {
 		method: "post",
 		body: "grant_type=client_credentials",
 		headers: {
 			Authorization: `Basic ${auth}`,
-			"Content-Type": "application/x-www-form-urlencoded",
 		},
 	});
-
-	if (!response.ok) {
-		const errorData = await response.json();
-		console.error("Failed to generate access token:", errorData);
-		throw new Error(JSON.stringify(errorData));
-	}
-
-	const jsonData = await response.json();
+	const jsonData = await handleResponse(response);
 	return jsonData.access_token;
+}
+
+// generate client token
+export async function generateClientToken() {
+	const accessToken = await generateAccessToken();
+	const response = await fetch(`${base}/v1/identity/generate-token`, {
+		method: "post",
+		headers: {
+			Authorization: `Bearer ${accessToken}`,
+			"Accept-Language": "en_US",
+			"Content-Type": "application/json",
+		},
+	});
+	console.log("response", response.status);
+	const jsonData = await handleResponse(response);
+	return jsonData.client_token;
+}
+
+// Function to generate a PayPal client token
+export async function generateClientToken() {
+	try {
+		const accessToken = await generateAccessToken();
+		const response = await fetch(`${base}/v1/identity/generate-token`, {
+			method: "post",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				"Accept-Language": "en_US",
+				"Content-Type": "application/json",
+			},
+		});
+		console.log("Response Status:", response.status);
+
+		const jsonData = await handleResponse(response);
+		console.log(
+			"Client token generated successfully:",
+			jsonData.client_token,
+		);
+		return jsonData.client_token;
+	} catch (error) {
+		console.error("Error during generateClientToken execution:", error);
+		throw error;
+	}
 }
 
 // Function to create a PayPal order

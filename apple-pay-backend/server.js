@@ -19,10 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 // Log environment variables for debugging (remove in production)
-console.log("Stripe Secret Key:", process.env.STRIPE_SECRET_KEY);
-console.log("PayPal Client ID:", process.env.CLIENT_ID);
-console.log("PayPal Client Secret:", process.env.CLIENT_SECRET);
-console.log("Merchant ID:", process.env.MERCHANT_ID);
+
 
 // Endpoint to create a Stripe PaymentIntent
 app.post("/create-payment-intent", async (req, res) => {
@@ -51,22 +48,22 @@ app.post("/create-payment-intent", async (req, res) => {
 });
 
 // Endpoint to create a PayPal order
+// Endpoint to create a PayPal order
 app.post("/create-paypal-order", async (req, res) => {
+	const { amount } = req.body;
+	console.log(
+		"Received request on BE to create PayPal order with amount:",
+		amount,
+	);
+
 	try {
-		const { amount } = req.body;
-
-		const order = await createOrder(amount);
-
-		if (!order || !order.id) {
-			throw new Error("Failed to create PayPal order.");
-		}
-
-		console.log("PayPal order created:", order);
-
-		res.status(200).json({ id: order.id });
+		// Gọi hàm createOrder thay vì createPayPalOrder
+		const order = await createOrder(amount); // Đảm bảo bạn sử dụng đúng tên hàm ở đây
+		console.log("Order created successfully on BE:", order);
+		res.json({ id: order.id });
 	} catch (error) {
-		console.error("Error creating PayPal order:", error);
-		res.status(500).json({ error: error.message });
+		console.error("Error creating PayPal order on BE:", error);
+		res.status(500).json({ error: "Failed to create order" });
 	}
 });
 

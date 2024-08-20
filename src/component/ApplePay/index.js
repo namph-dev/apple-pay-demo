@@ -148,12 +148,16 @@ const Payment = () => {
 				<PayPalScriptProvider
 					options={{
 						"client-id":
-							"Adx6N1yiRoV5HEOiMr31FK9HZsUNrb_ZXdGezDSwNwZIlXsP24vmkokWDdsMKLxDbBTP2psvpIXEKhVM",
+							"AcQrx8cdSaM8zNGMYetniBvpZxEZgzF-wppogtY6wDZEExEUkB5SKeNkDa-C4NVnTnLMChA_ObFusyX0",
 					}}
 				>
 					<PayPalButtons
 						style={{ layout: "vertical" }}
 						createOrder={(data, actions) => {
+							console.log(
+								"Initiating createOrder on FE with amount:",
+								100,
+							);
 							return fetch(
 								"https://e65b-113-23-53-236.ngrok-free.app/create-paypal-order", // Make sure this URL is correct
 								{
@@ -166,13 +170,28 @@ const Payment = () => {
 							)
 								.then((response) => response.json())
 								.then((data) => {
+									console.log(
+										"Response from BE (create-paypal-order):",
+										data,
+									);
 									if (data.id) {
+										console.log(
+											"Order ID received from BE:",
+											data.id,
+										);
 										return data.id; // Return the PayPal order ID
 									} else {
 										throw new Error(
 											"Order ID not received from server",
 										);
 									}
+								})
+								.catch((error) => {
+									console.error(
+										"Error in createOrder on FE:",
+										error,
+									);
+									throw error;
 								});
 						}}
 						onApprove={(data, actions) => {
