@@ -23,7 +23,7 @@ const Payment = () => {
 			headers: {
 				"Content-Type": "application/json",
 			},
-			body: JSON.stringify({ amount: 100 }), // Số tiền thanh toán tính bằng cent (5000 cent = $50)
+			body: JSON.stringify({ amount: 1000 }), // Số tiền thanh toán tính bằng cent (1000 cent = $10)
 		})
 			.then((res) => res.json())
 			.then((data) => {
@@ -41,7 +41,7 @@ const Payment = () => {
 						currency: "usd",
 						total: {
 							label: "Demo Payment",
-							amount: 100,
+							amount: 1000,
 						},
 						requestPayerName: true,
 						requestPayerEmail: true,
@@ -102,6 +102,22 @@ const Payment = () => {
 		} else if (paymentIntent && paymentIntent.status === "succeeded") {
 			console.log("Payment successful!");
 			setIsProcessing(false);
+		} else if (
+			paymentIntent &&
+			paymentIntent.status === "requires_action"
+		) {
+			// Yêu cầu xác thực 3D Secure
+			const { error: confirmError } = await stripe.confirmCardPayment(
+				clientSecret,
+			);
+
+			if (confirmError) {
+				setErrorMessage(confirmError.message);
+				setIsProcessing(false);
+			} else {
+				console.log("Payment successful after 3D Secure!");
+				setIsProcessing(false);
+			}
 		}
 	};
 
@@ -150,7 +166,7 @@ const Payment = () => {
 						createOrder={(data, actions) => {
 							console.log(
 								"Initiating createOrder on FE with amount:",
-								100,
+								1000,
 							);
 							return fetch(
 								`${apiBaseUrl}/create-paypal-order`, // Make sure this URL is correct
@@ -159,7 +175,7 @@ const Payment = () => {
 									headers: {
 										"Content-Type": "application/json",
 									},
-									body: JSON.stringify({ amount: 100 }), // Example amount in cents
+									body: JSON.stringify({ amount: 1000 }), // Example amount in cents
 								},
 							)
 								.then((response) => response.json())

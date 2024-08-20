@@ -18,8 +18,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Log environment variables for debugging (remove in production)
-
 // Endpoint to create a Stripe PaymentIntent
 app.post("/create-payment-intent", async (req, res) => {
 	try {
@@ -33,6 +31,11 @@ app.post("/create-payment-intent", async (req, res) => {
 			amount,
 			currency: "usd",
 			payment_method_types: ["card"],
+			payment_method_options: {
+				card: {
+					request_three_d_secure: "any", // Yêu cầu 3D Secure nếu cần thiết
+				},
+			},
 		});
 
 		console.log("PaymentIntent created:", paymentIntent);
@@ -47,7 +50,6 @@ app.post("/create-payment-intent", async (req, res) => {
 });
 
 // Endpoint to create a PayPal order
-// Endpoint to create a PayPal order
 app.post("/create-paypal-order", async (req, res) => {
 	const { amount } = req.body;
 	console.log(
@@ -56,8 +58,8 @@ app.post("/create-paypal-order", async (req, res) => {
 	);
 
 	try {
-		// Gọi hàm createOrder thay vì createPayPalOrder
-		const order = await createOrder(amount); // Đảm bảo bạn sử dụng đúng tên hàm ở đây
+		// Gọi hàm createOrder
+		const order = await createOrder(amount);
 		console.log("Order created successfully on BE:", order);
 		res.json({ id: order.id });
 	} catch (error) {
